@@ -9,14 +9,17 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const PORT = 5000;
+// 1. Render డైనమిక్ పోర్ట్ మరియు MongoDB Atlas URI సెటప్
+const PORT = process.env.PORT || 5000;
 const JWT_SECRET = 'mednexa_super_secret_key_2026';
 const googleClient = new OAuth2Client('YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com');
 
-// 1. MongoDB Connection
-mongoose.connect('mongodb://localhost:27017/mednexa')
+// MongoDB Atlas కనెక్షన్ (Render ఎన్విరాన్‌మెంట్ వేరియబుల్ నుండి వస్తుంది)
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/mednexa';
+
+mongoose.connect(MONGO_URI)
 .then(() => {
-  console.log('🟢 MongoDB Connected: mednexa DB');
+  console.log('🟢 MongoDB Connected successfully');
 }).catch(err => console.error('MongoDB connection error:', err));
 
 // 2. Mongoose Schemas & Models
@@ -30,6 +33,18 @@ const userSchema = new mongoose.Schema({
 });
 
 const User = mongoose.model('User', userSchema);
+
+const appointmentSchema = new mongoose.Schema({
+  patientName: String,
+  patientEmail: String,
+  doctorName: String,
+  department: String,
+  date: String,
+  time: String,
+  status: { type: String, default: 'Confirmed' }
+});
+
+const Appointment = mongoose.model('Appointment', appointmentSchema);
 
 // In-Memory OTP Store for Testing
 const otpStore = {};
@@ -108,7 +123,7 @@ app.post('/api/auth/verify-otp', async (req, res) => {
   }
 });
 
-// Google Token Verification Login (Supports Mock Local Fallback)
+// Google Token Verification Login
 app.post('/api/auth/google-login', async (req, res) => {
   try {
     const { token } = req.body;
@@ -147,24 +162,7 @@ app.post('/api/auth/google-login', async (req, res) => {
   }
 });
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`🚀 MedNexa Backend running on port ${PORT}`);
-});
-// Add Appointment Schema to Mongoose models
-const appointmentSchema = new mongoose.Schema({
-  patientName: String,
-  patientEmail: String,
-  doctorName: String,
-  department: String,
-  date: String,
-  time: String,
-  status: { type: String, default: 'Confirmed' }
-});
-
-const Appointment = mongoose.model('Appointment', appointmentSchema);
-
-// Appointment Booking Endpoint
+// Appointment Booking Endpoint (app.listen కి ముందే ఉండాలి)
 app.post('/api/appointments/book', async (req, res) => {
   try {
     const { patientName, patientEmail, doctorName, department, date, time } = req.body;
@@ -182,4 +180,9 @@ app.post('/api/appointments/book', async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
+});
+
+// 4. Start Server (అన్నీ ఎండ్‌పాయింట్స్ డిఫైన్ చేశాక చివరగా ఇది ఉండాలి)
+app.listen(PORT, () => {
+  console.log(`🚀 MedNexa Backend running on port ${PORT}`);
 });
