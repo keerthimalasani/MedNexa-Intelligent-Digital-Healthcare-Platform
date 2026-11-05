@@ -45,7 +45,8 @@ export default function PatientDetails() {
         method: 'POST',
         body: JSON.stringify(formData)
       });
-      if (data.success || data._id) {
+      
+      if (data.success || data._id || data.data?._id) {
         alert('Patient details added successfully!');
         setFormData({
           name: '',
