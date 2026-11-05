@@ -1,24 +1,38 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://mednexa-intelligent-digital-healthcare.onrender.com/api';
+const getApiBaseUrl = () => {
+  let url = import.meta.env.VITE_API_BASE_URL || 'https://mednexa-intelligent-digital-healthcare.onrender.com';
+  // Remove trailing slash if present
+  if (url.endsWith('/')) url = url.slice(0, -1);
+  // Ensure it ends with /api cleanly
+  if (!url.endsWith('/api')) url += '/api';
+  return url;
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export const apiRequest = async (endpoint, options = {}) => {
   const token = localStorage.getItem('token');
-  const formattedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  
+  // Clean up endpoint to avoid duplicate /api or missing slashes
+  let cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  if (cleanEndpoint.startsWith('/api/')) {
+    cleanEndpoint = cleanEndpoint.replace('/api', '');
+  }
 
   const headers = {
     'Content-Type': 'application/json',
-    ...(token && { 'Authorization': `Bearer ` + token }),
+    ...(token && { 'Authorization': `Bearer ${token}` }),
     ...options.headers,
   };
 
   try {
-    const response = await fetch(`${API_BASE_URL}${formattedEndpoint}`, {
+    const response = await fetch(`${API_BASE_URL}${cleanEndpoint}`, {
       ...options,
       headers,
     });
 
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
-      throw new Error(`Server connection error`);
+      throw new Error('Server connection error (Invalid server response)');
     }
 
     const data = await response.json();
