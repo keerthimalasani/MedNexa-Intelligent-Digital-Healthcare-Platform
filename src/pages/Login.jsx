@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
+import { apiRequest } from '../api';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -16,12 +17,10 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
+      const data = await apiRequest('/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      const data = await res.json();
       if (data.success) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
@@ -31,7 +30,7 @@ export default function Login() {
         alert(data.message || 'Invalid credentials.');
       }
     } catch (err) {
-      alert('Server connection error. Ensure backend is running on port 5000.');
+      alert(err.message || 'Server connection error.');
     } finally {
       setLoading(false);
     }
@@ -43,31 +42,27 @@ export default function Login() {
       return;
     }
     try {
-      const res = await fetch('http://localhost:5000/api/auth/send-otp', {
+      const data = await apiRequest('/auth/send-otp', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contact: email })
       });
-      const data = await res.json();
       if (data.success) {
         setOtpSent(true);
         setDevOtpHint(data.devOtp);
         alert(`OTP sent successfully! (Dev OTP: ${data.devOtp})`);
       }
     } catch (err) {
-      alert('Failed to send OTP.');
+      alert(err.message || 'Failed to send OTP.');
     }
   };
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:5000/api/auth/verify-otp', {
+      const data = await apiRequest('/auth/verify-otp', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contact: email, otp })
       });
-      const data = await res.json();
       if (data.success) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
@@ -77,18 +72,16 @@ export default function Login() {
         alert(data.message || 'Invalid OTP.');
       }
     } catch (err) {
-      alert('OTP verification failed.');
+      alert(err.message || 'OTP verification failed.');
     }
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
-      const res = await fetch('http://localhost:5000/api/auth/google-login', {
+      const data = await apiRequest('/auth/google-login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: credentialResponse.credential })
       });
-      const data = await res.json();
       if (data.success) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
@@ -98,7 +91,7 @@ export default function Login() {
         alert(data.message || 'Google authentication failed.');
       }
     } catch (err) {
-      alert('Server connection error during Google Login.');
+      alert(err.message || 'Server connection error during Google Login.');
     }
   };
 
