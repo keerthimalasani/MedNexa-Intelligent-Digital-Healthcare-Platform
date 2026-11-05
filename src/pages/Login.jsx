@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
-import { apiRequest } from '../api';
+// OLD (Wrong Path):
+// import { apiRequest } from "../api";
+
+// NEW (Correct Path):
+import { apiRequest } from "../api/api";
 
 export default function Login() {
   const [email, setEmail] = useState('');
