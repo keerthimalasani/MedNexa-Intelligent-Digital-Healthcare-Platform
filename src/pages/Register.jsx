@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
-import { apiRequest } from '../api';
+import { apiRequest } from "../api/api";
 
 export default function Register() {
   const [fullName, setFullName] = useState('');
