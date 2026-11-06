@@ -1,163 +1,154 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+const DOCTORS_CREDENTIALS = [
+  { name: 'Dr. Smith (General Medicine)', pin: '1234' },
+  { name: 'Dr. Johnson (Cardiology)', pin: '1234' },
+  { name: 'Dr. Williams (Pediatrics)', pin: '1234' },
+  { name: 'Dr. Robert Davis (Neurology)', pin: '1234' },
+  { name: 'Dr. Emily Martinez (Orthopedics)', pin: '1234' },
+  { name: 'Dr. Michael Brown (Dermatology)', pin: '1234' }
+];
 
 export default function DoctorPortal() {
-  const [selectedPatient, setSelectedPatient] = useState({
-    name: 'Ananya Sharma',
-    age: 28,
-    gender: 'Female',
-    symptoms: 'Severe migraine & dizziness',
-    bp: '120/80 mmHg'
-  });
-  
-  const [prescriptionText, setPrescriptionText] = useState(
-    '1. Tab. Paracetamol 650mg - 1-0-1 (5 Days)\n2. Tab. Pantoprazole 40mg - 1-0-0 (Before Breakfast)'
-  );
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loggedDoctor, setLoggedDoctor] = useState(DOCTORS_CREDENTIALS[0].name);
+  const [pinInput, setPinInput] = useState('');
+  const [appointments, setAppointments] = useState([]);
 
-  const patients = [
-    { id: 1, name: 'Ramesh Kumar', age: 42, gender: 'Male', symptoms: 'Persistent chest tightness & fatigue', bp: '135/85 mmHg', status: 'Waiting', statusColor: '#d97706' },
-    { id: 2, name: 'Ananya Sharma', age: 28, gender: 'Female', symptoms: 'Severe migraine & dizziness', bp: '120/80 mmHg', status: 'In Consultation', statusColor: '#0284c7' }
-  ];
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem('patientAppointments') || '[]');
+    setAppointments(stored);
+  }, []);
 
-  const handlePublish = () => {
-    alert(`Prescription successfully published & sent to pharmacy for ${selectedPatient.name}!`);
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const doc = DOCTORS_CREDENTIALS.find(d => d.name === loggedDoctor);
+    if (doc && doc.pin === pinInput) {
+      setIsLoggedIn(true);
+    } else {
+      alert('Invalid PIN. Please try again (Default PIN is 1234).');
+    }
   };
 
-  return (
-    <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '2.5rem 1.5rem', color: '#ffffff' }}>
-      
-      {/* Header Banner */}
-      <div style={{ background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)', padding: '2.5rem', borderRadius: '24px', color: '#fff', marginBottom: '2.5rem', boxShadow: '0 10px 25px -5px rgba(2, 132, 199, 0.3)' }}>
-        <span style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', fontSize: '0.75rem', fontWeight: '800', padding: '4px 12px', borderRadius: '20px', letterSpacing: '0.5px' }}>
-          DOCTOR WORKSTATION
-        </span>
-        <h2 style={{ fontSize: '2.3rem', fontWeight: '800', marginTop: '0.6rem', letterSpacing: '-0.5px' }}>Clinical Consultation Portal</h2>
-        <p style={{ color: '#e0f2fe', fontSize: '1rem', marginTop: '0.4rem', maxWidth: '700px' }}>
-          Review incoming patient queues, inspect vital signs, and log official digital prescriptions.
-        </p>
-      </div>
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setPinInput('');
+  };
 
-      {/* Main Layout Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '2rem', alignItems: 'start' }}>
-        
-        {/* Left Column: Patient Queue */}
-        <div>
-          <h3 style={{ fontSize: '1.3rem', fontWeight: '800', color: '#f8fafc', marginBottom: '1.2rem' }}>
-            👥 Today's Patient Queue
-          </h3>
+  const doctorPatients = appointments.filter(p => p.doctor === loggedDoctor);
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {patients.map((p) => (
-              <div 
-                key={p.id}
-                style={{ 
-                  background: 'rgba(15, 23, 42, 0.75)', 
-                  backdropFilter: 'blur(16px)', 
-                  border: selectedPatient.name === p.name ? '2px solid #0284c7' : '1px solid rgba(255, 255, 255, 0.12)', 
-                  borderRadius: '20px', 
-                  padding: '1.8rem', 
-                  display: 'flex', 
-                  flexDirection: 'column', 
-                  gap: '0.8rem',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
-                }}
+  const styles = {
+    pageWrapper: { minHeight: '100vh', backgroundColor: '#090d16', padding: '100px 20px 40px 20px', fontFamily: 'system-ui, sans-serif', color: '#ffffff', display: 'flex', flexDirection: 'column', alignItems: 'center' },
+    container: { width: '100%', maxWidth: '900px' },
+    loginCard: { backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '32px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', maxWidth: '450px', margin: '40px auto', width: '100%' },
+    title: { fontSize: '22px', fontWeight: '700', color: '#ffffff', marginBottom: '8px' },
+    subtitle: { fontSize: '14px', color: '#94a3b8', marginBottom: '24px' },
+    fieldGroup: { marginBottom: '16px', display: 'flex', flexDirection: 'column' },
+    label: { fontSize: '12px', fontWeight: '600', color: '#cbd5e1', marginBottom: '6px' },
+    select: { width: '100%', padding: '12px 16px', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '10px', color: '#ffffff', fontSize: '14px', outline: 'none' },
+    input: { width: '100%', padding: '12px 16px', backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '10px', color: '#ffffff', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
+    primaryBtn: { width: '100%', padding: '12px', backgroundColor: '#0284c7', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', marginTop: '8px' },
+    secondaryBtn: { padding: '8px 16px', backgroundColor: '#334155', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
+    headerCard: { backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' },
+    badge: { backgroundColor: '#0284c7', color: '#fff', padding: '6px 14px', borderRadius: '20px', fontSize: '14px', fontWeight: '600' },
+    tableCard: { backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '16px', padding: '24px', overflowX: 'auto' },
+    table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' },
+    th: { borderBottom: '1px solid #334155', padding: '12px', color: '#94a3b8', fontWeight: '600' },
+    td: { borderBottom: '1px solid #1e293b', padding: '12px', color: '#cbd5e1' }
+  };
+
+  // If not logged in, show Doctor Login Screen
+  if (!isLoggedIn) {
+    return (
+      <div style={styles.pageWrapper}>
+        <div style={styles.loginCard}>
+          <h2 style={styles.title}>Doctor Portal Login</h2>
+          <p style={styles.subtitle}>Select your profile and enter your access PIN to view your patients.</p>
+          
+          <form onSubmit={handleLogin}>
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>Select Doctor Profile</label>
+              <select 
+                value={loggedDoctor} 
+                onChange={(e) => setLoggedDoctor(e.target.value)} 
+                style={styles.select}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h4 style={{ fontSize: '1.2rem', color: '#f8fafc', fontWeight: '800' }}>
-                    {p.name} <span style={{ fontSize: '0.9rem', color: '#94a3b8', fontWeight: '600' }}>({p.age}y / {p.gender})</span>
-                  </h4>
-                  <span style={{ background: p.statusColor, color: '#fff', fontSize: '0.75rem', fontWeight: '800', padding: '4px 10px', borderRadius: '6px' }}>
-                    {p.status}
-                  </span>
-                </div>
+                {DOCTORS_CREDENTIALS.map((doc, idx) => (
+                  <option key={idx} value={doc.name}>{doc.name}</option>
+                ))}
+              </select>
+            </div>
 
-                <p style={{ fontSize: '0.9rem', color: '#cbd5e1' }}>
-                  <b>Reported Symptoms:</b> {p.symptoms}
-                </p>
-                <p style={{ fontSize: '0.88rem', color: '#38bdf8', fontWeight: '700' }}>
-                  🩺 Recorded BP: {p.bp}
-                </p>
+            <div style={styles.fieldGroup}>
+              <label style={styles.label}>Access PIN</label>
+              <input 
+                type="password" 
+                placeholder="Enter 4-digit PIN" 
+                value={pinInput} 
+                onChange={(e) => setPinInput(e.target.value)} 
+                required 
+                style={styles.input}
+              />
+            </div>
 
-                <button 
-                  onClick={() => setSelectedPatient(p)}
-                  style={{ 
-                    alignSelf: 'flex-start',
-                    background: selectedPatient.name === p.name ? '#16a34a' : 'rgba(2, 132, 199, 0.2)', 
-                    color: selectedPatient.name === p.name ? '#fff' : '#38bdf8', 
-                    border: selectedPatient.name === p.name ? 'none' : '1px solid rgba(56, 189, 248, 0.4)', 
-                    padding: '0.6rem 1.2rem', 
-                    borderRadius: '10px', 
-                    fontWeight: '700', 
-                    cursor: 'pointer', 
-                    fontSize: '0.88rem',
-                    marginTop: '0.4rem'
-                  }}
-                >
-                  {selectedPatient.name === p.name ? '✓ Currently Selected for Prescription' : 'Select for Prescription →'}
-                </button>
-              </div>
-            ))}
+            <button type="submit" style={styles.primaryBtn}>Login to Portal</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Once logged in, show their personalized dashboard & patient count
+  return (
+    <div style={styles.pageWrapper}>
+      <div style={styles.container}>
+        
+        <div style={styles.headerCard}>
+          <div>
+            <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#ffffff' }}>Welcome, {loggedDoctor}</h2>
+            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '4px 0 0' }}>Viewing your assigned appointments and patient records</p>
+          </div>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div style={styles.badge}>
+              Patients: {doctorPatients.length}
+            </div>
+            <button onClick={handleLogout} style={styles.secondaryBtn}>Logout</button>
           </div>
         </div>
 
-        {/* Right Column: Prescription Writer */}
-        <div>
-          <div 
-            style={{ 
-              background: 'rgba(15, 23, 42, 0.85)', 
-              backdropFilter: 'blur(16px)', 
-              border: '1px solid rgba(255, 255, 255, 0.15)', 
-              borderRadius: '24px', 
-              padding: '2rem',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
-            }}
-          >
-            <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#f8fafc', marginBottom: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              📝 Issue Clinical Prescription
-            </h3>
-            <p style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: '600', marginBottom: '1.5rem' }}>
-              Currently writing for: <span style={{ color: '#fff', fontWeight: '800' }}>{selectedPatient.name}</span>
-            </p>
+        <div style={styles.tableCard}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: '#fff' }}>
+            Appointments for {loggedDoctor}
+          </h3>
 
-            <label style={{ fontSize: '0.85rem', fontWeight: '700', color: '#94a3b8', display: 'block', marginBottom: '0.5rem' }}>
-              Medications & Dosages
-            </label>
-            <textarea
-              rows="6"
-              value={prescriptionText}
-              onChange={(e) => setPrescriptionText(e.target.value)}
-              style={{ 
-                width: '100%', 
-                padding: '1rem', 
-                borderRadius: '14px', 
-                border: '1px solid rgba(255, 255, 255, 0.2)', 
-                outline: 'none', 
-                background: 'rgba(255, 255, 255, 0.05)', 
-                color: '#f8fafc',
-                fontSize: '0.95rem',
-                fontFamily: 'monospace',
-                resize: 'vertical',
-                marginBottom: '1.5rem'
-              }}
-            />
-
-            <button 
-              onClick={handlePublish}
-              style={{ 
-                width: '100%', 
-                background: '#16a34a', 
-                color: '#fff', 
-                border: 'none', 
-                padding: '0.95rem', 
-                borderRadius: '12px', 
-                fontWeight: '800', 
-                fontSize: '1rem', 
-                cursor: 'pointer',
-                boxShadow: '0 4px 15px rgba(22, 163, 74, 0.4)'
-              }}
-            >
-              Publish & Send to Pharmacy
-            </button>
-          </div>
+          {doctorPatients.length === 0 ? (
+            <p style={{ color: '#94a3b8', fontSize: '14px' }}>No patients booked with you yet.</p>
+          ) : (
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>Patient Name</th>
+                  <th style={styles.th}>Age / Gender</th>
+                  <th style={styles.th}>Contact</th>
+                  <th style={styles.th}>Symptoms</th>
+                  <th style={styles.th}>Medical History</th>
+                  <th style={styles.th}>Booked Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {doctorPatients.map((p) => (
+                  <tr key={p.id}>
+                    <td style={{ ...styles.td, fontWeight: '600', color: '#fff' }}>{p.name}</td>
+                    <td style={styles.td}>{p.age} yrs / {p.gender}</td>
+                    <td style={styles.td}>{p.contact}</td>
+                    <td style={styles.td}>{p.symptoms || 'None'}</td>
+                    <td style={styles.td}>{p.medicalHistory || 'None'}</td>
+                    <td style={styles.td}>{p.bookedAt}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
       </div>
