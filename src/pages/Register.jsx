@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GoogleLogin } from '@react-oauth/google';
-import { apiRequest } from "../api/api";
 
 export default function Register() {
   const [fullName, setFullName] = useState('');
@@ -13,99 +11,63 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleRegister = async (e) => {
+  const handleRegister = (e) => {
     e.preventDefault();
     setLoading(true);
-    try {
-      const data = await apiRequest('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({ name: fullName, email: emailOrPhone, password })
-      });
-      if (data.success) {
-        alert('Account created successfully! Please sign in.');
-        navigate('/login');
-      } else {
-        alert(data.message || 'Registration failed.');
+
+    setTimeout(() => {
+      const existingUsers = JSON.parse(localStorage.getItem('mednexa_users') || '[]');
+      const userExists = existingUsers.some(user => user.email === emailOrPhone);
+
+      if (userExists) {
+        setLoading(false);
+        alert('An account with this email/phone already exists!');
+        return;
       }
-    } catch (err) {
-      alert(err.message || 'Server connection error.');
-    } finally {
+
+      const newUser = {
+        id: Date.now(),
+        name: fullName,
+        email: emailOrPhone,
+        password: password
+      };
+
+      localStorage.setItem('mednexa_users', JSON.stringify([...existingUsers, newUser]));
       setLoading(false);
-    }
+      alert('Account created successfully! Please sign in.');
+      navigate('/login');
+    }, 300);
   };
 
-  const handleSendOtp = async () => {
+  const handleSendOtp = () => {
     const contactTarget = emailOrPhone || 'user@mednexa.com';
-    try {
-      const data = await apiRequest('/auth/send-otp', {
-        method: 'POST',
-        body: JSON.stringify({ contact: contactTarget })
-      });
-      if (data.success) {
-        setEmailOrPhone(contactTarget);
-        setOtpSent(true);
-        setDevOtpHint(data.devOtp);
-        alert(`OTP sent successfully! (Dev OTP: ${data.devOtp})`);
-      }
-    } catch (err) {
-      alert(err.message || 'Failed to send OTP.');
-    }
+    const mockOtp = '123456';
+    
+    setEmailOrPhone(contactTarget);
+    setOtpSent(true);
+    setDevOtpHint(mockOtp);
+    alert(`OTP sent successfully! (Dev OTP: ${mockOtp})`);
   };
 
-  const handleVerifyOtp = async (e) => {
+  const handleVerifyOtp = (e) => {
     e.preventDefault();
-    try {
-      const data = await apiRequest('/auth/verify-otp', {
-        method: 'POST',
-        body: JSON.stringify({ contact: emailOrPhone, otp })
-      });
-      if (data.success) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        alert('OTP verified successfully! Welcome to MedNexa.');
-        navigate('/');
-      } else {
-        alert(data.message || 'Invalid OTP.');
-      }
-    } catch (err) {
-      alert(err.message || 'OTP verification failed.');
+    if (otp === devOtpHint || otp === '123456') {
+      const mockUser = { id: Date.now(), name: fullName || 'Valued User', email: emailOrPhone };
+      localStorage.setItem('token', 'mock-jwt-token-local');
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      alert('OTP verified successfully! Welcome to MedNexa.');
+      navigate('/');
+    } else {
+      alert('Invalid OTP. Please enter 123456.');
     }
   };
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    try {
-      const data = await apiRequest('/auth/google-login', {
-        method: 'POST',
-        body: JSON.stringify({ token: credentialResponse.credential })
-      });
-      if (data.success) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        alert('Signed in with Google successfully!');
-        navigate('/');
-      } else {
-        alert(data.message || 'Google authentication failed.');
-      }
-    } catch (err) {
-      alert(err.message || 'Server connection error during Google Login.');
-    }
-  };
-
-  const handleMockGoogleLogin = async () => {
-    try {
-      const data = await apiRequest('/auth/google-login', {
-        method: 'POST',
-        body: JSON.stringify({ token: 'mock-token-local' })
-      });
-      if (data.success) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        alert('Signed in with Google successfully!');
-        navigate('/');
-      }
-    } catch (err) {
-      alert(err.message || 'Server connection error.');
-    }
+  const handleGoogleAuth = () => {
+    const googleUser = { id: Date.now(), name: 'Google User', email: 'googleuser@mednexa.com' };
+    localStorage.setItem('token', 'mock-google-token-local');
+    localStorage.setItem('user', JSON.stringify(googleUser));
+    alert('Signed in with Google successfully!');
+    navigate('/');
   };
 
   const styles = {
@@ -337,13 +299,8 @@ export default function Register() {
         )}
 
         <div style={styles.googleContainer}>
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={handleMockGoogleLogin}
-            useOneTap={false}
-          />
-          <button type="button" onClick={handleMockGoogleLogin} style={styles.fallbackGoogleBtn}>
-            ⚡ Quick Local Google Sign-In
+          <button type="button" onClick={handleGoogleAuth} style={styles.fallbackGoogleBtn}>
+            ⚡ Sign in with Google (Local Demo)
           </button>
         </div>
 
